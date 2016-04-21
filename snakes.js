@@ -1,7 +1,10 @@
-var myObstacles = [];
+
+var gameSize = 64;
+var gameHandle;
 var food;
 var snake;
 var myGameArea;
+var monsters[];
 
 function paintSquare(context, pos, px, color) {
     "use strict";
@@ -67,6 +70,7 @@ function Snake(pxPerSquare, gameSize) {
         }
         
         if (newHead.x < 0 || newHead.x > this.size || newHead.y < 0 || newHead.y > this.size) {
+            clearInterval(gameHandle);
             alert("Game Over!");
             while (this.body.length > 0) {
                 this.paintToCanvas(this.body.pop());
@@ -123,9 +127,12 @@ function GameArea(size) {
         this.drawGrid(size, this.pxPerSquare);
 
         snake.create(this.context);
-
-        this.frameNo = 0;
-        //this.interval = setInterval(updateGameArea, 20);
+        
+/*        for (var i = 0; i < 5; i++) {
+            var monster = generateAMonster();
+            paintSquare(this.context, monster, this.px, "Yellow");
+            monsters.push(monster);
+        }*/
     };
 
     this.drawGrid = function (num, px) {
@@ -200,10 +207,26 @@ function everyinterval() {
 
 function prepareGame() {
     "use strict";
-    myGameArea = new GameArea(48);
+    myGameArea = new GameArea(gameSize);
     myGameArea.create();
     
     myGameArea.foodGenerator();
     
-    setInterval(everyinterval, 200);
+}
+
+/*
+function generateAMonster() {
+    var x = Math.random() * gameSize;
+    var y = Math.random() * gameSize;
+    
+    return {x: x, y: y};
+}*/
+
+/*SnakeGame = function () {
+    
+} */
+
+function startGame() {
+    "using strict";
+    gameHandle = setInterval(everyinterval, 100);
 }
