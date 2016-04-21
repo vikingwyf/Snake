@@ -1,10 +1,11 @@
 
 var gameSize = 64;
-var gameHandle;
+var snakeMoveInterval;
+var monsterMoveInterval;
 var food;
 var snake;
 var myGameArea;
-var monsters[];
+var monsters = [];
 
 function paintSquare(context, pos, px, color) {
     "use strict";
@@ -18,9 +19,22 @@ function paintToSnake(context, pos, px) {
     paintSquare(context, pos, px, "Black");
 }
 
+function paintToMonster(context, pos, px) {
+    "use strict";
+    paintSquare(context, pos, px, "Yellow");
+}
+
 function paintToCanvas(context, pos, px) {
     "use strict";
     paintSquare(context, pos, px, "Grey");
+}
+
+function generateAMonster() {
+	"using strict";
+    var x = Math.round(Math.random() * gameSize);
+    var y = Math.round(Math.random() * gameSize);
+    
+    return {x: x, y: y};
 }
 
 function Snake(pxPerSquare, gameSize) {
@@ -39,7 +53,7 @@ function Snake(pxPerSquare, gameSize) {
         this.body.push({ x: this.body[0].x, y: this.body[0].y + 1 });
         this.paintToSnakeBody(this.body[0]);
         this.paintToSnakeBody(this.body[1]);
-    }
+    };
     
     this.create = function (context) {
         this.context = context;
@@ -68,23 +82,26 @@ function Snake(pxPerSquare, gameSize) {
 
         default:
         }
+		
+		for (var i=0; i<monsters.length; i++) {
+			if (newHead.x === monsters[i].x && newHead.y === monsters[i].y) {
+				this.gameOver();
+				return;
+			}
+		}
         
         if (newHead.x < 0 || newHead.x > this.size || newHead.y < 0 || newHead.y > this.size) {
-            clearInterval(gameHandle);
-            alert("Game Over!");
-            while (this.body.length > 0) {
-                this.paintToCanvas(this.body.pop());
-            }
-            this.init();
-        } else {
-            this.body.unshift(newHead);
-            this.paintToSnakeBody(newHead);
-            if (newHead.x != food.x || newHead.y != food.y) {
-                this.paintToCanvas(this.body.pop());
-            } else {
-                this.eat();
-            }
-        }
+            this.gameOver();
+			return;
+        } 
+		
+		this.body.unshift(newHead);
+		this.paintToSnakeBody(newHead);
+		if (newHead.x != food.x || newHead.y != food.y) {
+			this.paintToCanvas(this.body.pop());
+		} else {
+			this.eat();
+		}
     };
     
     this.turn = function (direction) {
@@ -96,6 +113,16 @@ function Snake(pxPerSquare, gameSize) {
     this.eat = function () {
         myGameArea.foodGenerator();
     };
+	
+	this.gameOver = function () {
+		clearInterval(snakeMoveInterval);
+		clearInterval(monsterMoveInterval)
+		alert("Game Over!");
+		while (this.body.length > 0) {
+			this.paintToCanvas(this.body.pop());
+		}
+		this.init();
+	}
 
     this.paintToSnakeBody = function (pos) {
         var pxToPaint = this.px - 2;
@@ -127,12 +154,13 @@ function GameArea(size) {
         this.drawGrid(size, this.pxPerSquare);
 
         snake.create(this.context);
-        
-/*        for (var i = 0; i < 5; i++) {
+       
+		var i;
+		for (i = 0; i < 5; i++) {
             var monster = generateAMonster();
-            paintSquare(this.context, monster, this.px, "Yellow");
+            paintToMonster(this.context, monster, this.pxPerSquare);
             monsters.push(monster);
-        }*/
+        }
     };
 
     this.drawGrid = function (num, px) {
@@ -159,8 +187,8 @@ function GameArea(size) {
             var x = Math.round(Math.random() * this.size);
             var y = Math.round(Math.random() * this.size);
             
-            var snakeBody;
-            for (snakeBody in snake.body) {
+            for (var i=0; i<snake.body.length; i++) {
+				var snakeBody = snake.body[i];
                 if (x === snakeBody.x && y === snakeBody.y) {
                     gotIt = false;
                     break;
@@ -200,13 +228,25 @@ function GameArea(size) {
     };
 }
 
-function everyinterval() {
-    "use strict";
+function snakeMove() {
+    "using strict";
     snake.move();
 }
 
+function monsterMove() {
+	"using strict";
+	for (var i=0; i<monsters.length; i++) {
+		var moveX = Math.round(Math.random() * gameSize);
+		var moveY = Math.round(Math.random() * gameSize);
+		paintToCanvas(myGameArea.context, monsters[i], myGameArea.pxPerSquare);
+		monsters[i].x = (monsters[i].x + moveX) > gameSize ? (monsters[i].x + moveX - gameSize) : (monsters[i].x + moveX);
+		monsters[i].y = (monsters[i].y + moveY) > gameSize ? (monsters[i].y + moveY - gameSize) : (monsters[i].y + moveY);
+		paintToMonster(myGameArea.context, monsters[i], myGameArea.pxPerSquare);
+	}
+}
+
 function prepareGame() {
-    "use strict";
+    "using strict";
     myGameArea = new GameArea(gameSize);
     myGameArea.create();
     
@@ -214,19 +254,12 @@ function prepareGame() {
     
 }
 
-/*
-function generateAMonster() {
-    var x = Math.random() * gameSize;
-    var y = Math.random() * gameSize;
-    
-    return {x: x, y: y};
-}*/
-
 /*SnakeGame = function () {
     
 } */
 
 function startGame() {
     "using strict";
-    gameHandle = setInterval(everyinterval, 100);
+    snakeMoveInterval = setInterval(snakeMove, 100);
+	monsterMoveInterval = setInterval(monsterMove, 2000);
 }
