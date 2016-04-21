@@ -28,19 +28,25 @@ function Snake(pxPerSquare, gameSize) {
     this.size = gameSize;
     this.px = pxPerSquare;
     this.body = [];
+    this.direction = "up";
 
-    this.create = function (context) {
-        this.context = context;
+    this.init = function () {
+        this.body = [];
         this.body.push({ x: Math.round(this.size / 2) - 1, y: Math.round(this.size / 2) - 1 });
         this.body.push({ x: this.body[0].x, y: this.body[0].y + 1 });
         this.paintToSnakeBody(this.body[0]);
         this.paintToSnakeBody(this.body[1]);
+    }
+    
+    this.create = function (context) {
+        this.context = context;
+        this.init();
     };
 
-    this.move = function (direction) {
+    this.move = function () {
 
         var newHead;
-        switch (direction) {
+        switch (this.direction) {
         case "up":
             newHead = { x: this.body[0].x, y: this.body[0].y - 1 };
             break;
@@ -59,20 +65,32 @@ function Snake(pxPerSquare, gameSize) {
 
         default:
         }
-
-        this.body.unshift(newHead);
-        this.paintToSnakeBody(newHead);
-        if (newHead.x === food.x && newhead.y === food.y) {
-            
-        } else {
-            this.paintToCanvas(this.body.pop());
-        }
         
-        return this.body;
+        if (newHead.x < 0 || newHead.x > this.size || newHead.y < 0 || newHead.y > this.size) {
+            alert("Game Over!");
+            while (this.body.length > 0) {
+                this.paintToCanvas(this.body.pop());
+            }
+            this.init();
+        } else {
+            this.body.unshift(newHead);
+            this.paintToSnakeBody(newHead);
+            if (newHead.x != food.x || newHead.y != food.y) {
+                this.paintToCanvas(this.body.pop());
+            } else {
+                this.eat();
+            }
+        }
+    };
+    
+    this.turn = function (direction) {
+        if (this.direction != direction) {
+            this.direction = direction;
+        }
     };
     
     this.eat = function () {
-
+        myGameArea.foodGenerator();
     };
 
     this.paintToSnakeBody = function (pos) {
@@ -157,16 +175,16 @@ function GameArea(size) {
         var key = e.keyCode ? e.keyCode : e.which;
         switch (key) {
         case 37:
-            snake.move("left");
+            snake.turn("left");
             break;
         case 38:
-            snake.move("up");
+            snake.turn("up");
             break;
         case 39:
-            snake.move("right");
+            snake.turn("right");
             break;
         case 40:
-            snake.move("down");
+            snake.turn("down");
             break;
         default:
             //alert("invalid input");
@@ -175,9 +193,9 @@ function GameArea(size) {
     };
 }
 
-function everyinterval(n) {
+function everyinterval() {
     "use strict";
-
+    snake.move();
 }
 
 function prepareGame() {
@@ -186,4 +204,6 @@ function prepareGame() {
     myGameArea.create();
     
     myGameArea.foodGenerator();
+    
+    setInterval(everyinterval, 200);
 }
