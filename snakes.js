@@ -1,13 +1,15 @@
 var snakeGame;
 
-function everyInterval() {
-	snakeGame.everyInterval();
-};
-
+// interface for html file
 function prepareGame() {
 	snakeGame = new SnakeGame();
 };
 
+function everyInterval() {
+	snakeGame.everyInterval();
+};
+
+// receive keyborad inputs
 window.onkeyup = function (e) {
 	var key = e.keyCode ? e.keyCode : e.which;
 	var dir;
@@ -46,6 +48,8 @@ window.onkeyup = function (e) {
 	}
 };
 
+
+// It represents the snake game.
 class SnakeGame {
 	constructor() {
 		this.level = 0;
@@ -143,6 +147,7 @@ class SnakeGame {
 	};
 }
 
+// It represents the game canvas.
 class GameCanvas {
 	constructor (width, height, pixelsPerSquare) {
 		this.width = width;
@@ -188,6 +193,7 @@ class GameCanvas {
     };
 }
 
+// It represents the snake.
 class Snake {
 	constructor (canvasCenter, snakePainter, canvasPainter) {
 		this.snakePainter = snakePainter;
@@ -274,6 +280,7 @@ class Snake {
 	};
 }
 
+// It represents the food for snake to eat.
 class Food {
     constructor(point, foodPainter, canvasPainter) {
         this.point = point;
@@ -288,6 +295,7 @@ class Food {
     };
 }
 
+// It represents a point on the canvas.
 class Point {
 	constructor(x, y) {
 		this.x = x;
@@ -315,6 +323,7 @@ class Point {
 	};
 }
 
+// A painter to paint a square check on the canvas.
 class SquarePainter {
 	constructor(context, sqrPixels, color) {
 		this.context = context;
