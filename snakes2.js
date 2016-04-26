@@ -29,7 +29,7 @@ window.onkeyup = function (e) {
                 default:
             }
             break;
-        case 37: // 
+        case 37: 
             snakeGame.snake.turn("left");
             break;
         case 38:
@@ -48,15 +48,19 @@ window.onkeyup = function (e) {
 
 class SnakeGame {
 	constructor() {
+		this.level = 0;
+		this.highestLevel = 10;
+		this.levelUpNum = 5;
+		this.startInterval = 400;
         this.status = "not started"
-		this.started = false;
-		this.width = 64;
-		this.height = 48;
-		this.pixelsPerSquare = 10;
+		this.width = 32;
+		this.height = 24;
+		this.pixelsPerSquare = 20;
 		this.snakeColor = "Black";
-		this.monstorColor = "Yellow";
 		this.canvasColor = "Grey";
-		this.foodColor = "Green";
+		this.foodColor = "Red";
+		
+		// create game canvas
 		this.gameCanvas = new GameCanvas(this.width, this.height, this.pixelsPerSquare);
 		this.context = this.gameCanvas.context;
 		
@@ -69,13 +73,12 @@ class SnakeGame {
 	
 	everyInterval() {
 		// move the snake
-        if (this.snake.move() == false) {
+        if (this.snake.moveHead() == false) {
             this.gameOver();
             return;
         }
         
-        // --- game over check ---
-        // run out?
+        // snake ran out?      
         var snakeHead = this.snake.head();
         if (this.gameCanvas.outOfCanvas(snakeHead)) {
             this.gameOver();
@@ -83,24 +86,31 @@ class SnakeGame {
         } 
         
         // get the food?
-		if (!this.snake.head().equals(this.food.point)) {
-			this.canvasPainter.paint(this.snake.body.pop());	
+		if (this.snake.head().equals(this.food.point) == false) {
+			this.snake.moveTail();
 		} else {
 			this.generateFood();
+		}
+		
+		// upgrade?
+		if (this.snake.length() / this.levelUpNum > this.level) {
+			this.level = Math.min(this.level + 1, this.highestLevel);
+			clearInterval(this.interval);
+			this.interval = setInterval(everyInterval, this.startInterval * (1 - this.level/this.highestLevel));
+			
 		}
 	};
 	
 	generateFood() {
+		var point;
 		while (true) {
-			var gotIt = true;
-			var point = this.gameCanvas.getARandomPointOnCanvas();
+			point = this.gameCanvas.getARandomPointOnCanvas();
 			if (this.snake.partOfBody(point)) {
-				gotIt = false;
+				continue;
 			}
-			if (gotIt === true) {
-				this.food = new Food(point, this.foodPainter, this.canvasPainter);
-				break;
-			}
+		
+			this.food = new Food(point, this.foodPainter, this.canvasPainter);
+			break;
 		}
 	};
 	
@@ -110,17 +120,18 @@ class SnakeGame {
 	};
 	
 	stop() {
-		clearInterval(this.snakeInterval);
+		clearInterval(this.interval);
 		this.status = "stopped";
 	};
     
     resume() {
-        this.snakeInterval = setInterval(everyInterval, 100);
+        this.interval = setInterval(everyInterval, this.startInterval * (1 - this.level/this.highestLevel));
 		this.status = "started";
     };
     
     clear() {
-        clearInterval(this.snakeInterval);
+        clearInterval(	this.interval);
+		this.level = 0;
         this.snake.clear();
         this.food.clear();
         this.status = "not started";
@@ -198,6 +209,10 @@ class Snake {
 		return this.body[0];
 	};
 	
+	length() {
+		return this.body.length;	
+	};
+	
 	partOfBody(pos) {
         for (var i=0; i<this.body.length; i++) {
             if (this.body[i].equals(pos)) {
@@ -208,14 +223,14 @@ class Snake {
 	};
     
     clear() {
-        while (this.body.length > 0) {
+        while (this.length() > 0) {
 			this.canvasPainter.paint(this.body.pop());
 		}
         
 		this.init();
     };
  	
-	move () {
+	moveHead () {
 		var currentHead = this.body[0];
         var newHead;
         switch (this.direction) {
@@ -247,6 +262,10 @@ class Snake {
         }
     };
 	
+	moveTail() {
+		this.canvasPainter.paint(this.body.pop());
+	};
+	
 	turn (direction) {
 		if ((this.direction === "up" || this.direction === "down") && (direction === "left" || direction === "right") 
 		   || (this.direction === "left" || this.direction === "right") && (direction === "up" || direction === "down")) {
@@ -269,14 +288,6 @@ class Food {
     };
 }
 
-class Monster {
-    constructor() {
-        
-    };
-    
-    
-}
-
 class Point {
 	constructor(x, y) {
 		this.x = x;
@@ -284,7 +295,7 @@ class Point {
 	};
     
     equals(anotherPoint) {
-        return this.x === anotherPoint.x || this.y === anotherPoint.y
+        return (this.x === anotherPoint.x && this.y === anotherPoint.y);
     };
 	
 	itsLeftPoint() {

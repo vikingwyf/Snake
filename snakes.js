@@ -25,7 +25,7 @@ function paintToMonster(context, pos, px) {
 }
 
 function paintToCanvas(context, pos, px) {
-    "use strict";
+"use strict";
     paintSquare(context, pos, px, "Grey");
 }
 
